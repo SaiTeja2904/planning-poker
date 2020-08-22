@@ -1,0 +1,41 @@
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { RoomsService } from './rooms.service';
+
+@Controller('rooms')
+export class RoomsController {
+  constructor(public roomsService: RoomsService) {}
+
+  @Post('createRoom')
+  createRoom(@Body() { userDetails }) {
+    return this.roomsService.createRoom(userDetails);
+  }
+
+  @Post('joinRoom')
+  joinRoom(@Body() { userDetails, roomId }) {
+    return this.roomsService.joinRoom(userDetails, roomId);
+  }
+
+  @Get('status/:roomId')
+  getRoomStatus(@Param('roomId') roomId: number) {
+    return this.roomsService.getRoomStatus(roomId);
+  }
+
+  @Get('flipCards/:roomId')
+  flipCards(@Param('roomId') roomId: number) {
+    return this.roomsService.flipCards(roomId);
+  }
+}
+
+export interface Room {
+  owner: number;
+  users: any;
+  story: {
+    storyId: string;
+    storyDescription: string;
+  };
+  flipCards: boolean;
+}
+
+export interface Rooms {
+  [roomId: string]: Room;
+}
