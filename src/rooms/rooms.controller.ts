@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 
 @Controller('rooms')
@@ -20,9 +20,24 @@ export class RoomsController {
     return this.roomsService.getRoomStatus(roomId);
   }
 
-  @Get('flipCards/:roomId')
+  @Put('flipCards/:roomId')
   flipCards(@Param('roomId') roomId: number) {
     return this.roomsService.flipCards(roomId);
+  }
+
+  @Post('castVote')
+  castVote(@Body() { userId, roomId, storyPoints }) {
+    return this.roomsService.castVote({ userId, roomId, storyPoints });
+  }
+
+  @Put('resetStory/:roomId')
+  resetStory(@Param('roomId') roomId: number) {
+    return this.roomsService.resetStory(roomId);
+  }
+
+  @Post('setStoryDetails')
+  setStroryDetails({ storyDetails, roomId }) {
+    return this.roomsService.setStroryDetails(storyDetails, roomId);
   }
 }
 

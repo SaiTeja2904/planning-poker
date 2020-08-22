@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Users, User } from './users.controller';
 
 @Injectable()
 export class UsersService {
@@ -23,4 +22,14 @@ export class UsersService {
       return acc;
     }, currentRoomUsers);
   }
+}
+
+export interface User {
+  userName: string;
+  userId: number;
+  currentRoom: number;
+}
+
+export interface Users {
+  [userId: number]: User;
 }

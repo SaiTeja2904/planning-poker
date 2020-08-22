@@ -1,5 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from 'src/rooms/users.service';
 import { Rooms } from './rooms.controller';
 
 @Injectable()
@@ -8,7 +8,6 @@ export class RoomsService {
   constructor(public userService: UsersService) {}
 
   createRoom(userDetails) {
-    // console.log(userDetails);
     const { userId } = userDetails;
     let roomId = Math.floor(Math.random() * Math.pow(10, 6));
     while (this.rooms[roomId]) {
@@ -33,16 +32,9 @@ export class RoomsService {
   }
 
   joinRoom(userDetails, roomId) {
-    // console.log(userDetails);
     const { userId } = userDetails;
     if (!this.rooms[roomId]) {
-      throw new HttpException(
-        {
-          status: HttpStatus.NOT_FOUND,
-          error: 'Room Not Found',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      this.roomNotFoundError();
     }
 
     const room = this.rooms[roomId];
@@ -55,59 +47,109 @@ export class RoomsService {
   }
 
   getRoomStatus(roomId) {
-    console.log(this.userService.getAllUsers());
     if (!this.rooms[roomId]) {
-      throw new HttpException(
-        {
-          status: HttpStatus.NOT_FOUND,
-          error: 'Room Not Found',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      this.roomNotFoundError();
     }
     const room = this.rooms[roomId];
     const currentRoomUsers = this.userService.getAllUsersByRoomId(roomId);
-    const { owner, users, flipCards } = room;
+    const { owner, users, flipCards, story } = room;
+    let usersData;
     if (flipCards) {
-      return {
-        owner: currentRoomUsers[owner].userName,
-        users: Object.keys(users).reduce((acc, curr) => {
-          acc.push({
-            ...users[curr],
-            userName: currentRoomUsers[curr].userName,
-          });
-          return acc;
-        }, []),
-        flipCards,
-      };
+      usersData = Object.keys(users).reduce((acc, curr) => {
+        acc.push({
+          ...users[curr],
+          userName: currentRoomUsers[curr].userName,
+        });
+        return acc;
+      }, []);
     } else {
-      return {
-        owner: currentRoomUsers[owner].userName,
-        users: Object.keys(users).reduce((acc, curr) => {
-          acc.push({
-            ...users[curr],
-            storyPoints: 0,
-            userName: currentRoomUsers[curr].userName,
-          });
-          return acc;
-        }, []),
-        flipCards,
-      };
+      usersData = Object.keys(users).reduce((acc, curr) => {
+        acc.push({
+          ...users[curr],
+          storyPoints: 0,
+          userName: currentRoomUsers[curr].userName,
+        });
+        return acc;
+      }, []);
     }
+    return {
+      owner: currentRoomUsers[owner].userName,
+      users: usersData,
+      story,
+      flipCards,
+    };
   }
 
   flipCards(roomId) {
     if (!this.rooms[roomId]) {
+      this.roomNotFoundError();
+    }
+    const room = this.rooms[roomId];
+    room.flipCards = true;
+    return {
+      status: 'Success',
+    };
+  }
+
+  castVote({ userId, roomId, storyPoints }) {
+    if (!this.rooms[roomId]) {
+      this.roomNotFoundError();
+    }
+    const room = this.rooms[roomId];
+    if (!room.users[+userId]) {
       throw new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
-          error: 'Room Not Found',
+          error: 'User Not Found',
         },
         HttpStatus.NOT_FOUND,
       );
     }
+    const user = room.users[userId];
+    user.storyPoints = storyPoints;
+    user.castedVote = true;
+    return {
+      status: 'Success',
+    };
+  }
+
+  resetStory(roomId) {
+    if (!this.rooms[roomId]) {
+      this.roomNotFoundError();
+    }
+
+    let { flipCards, story, users } = this.rooms[roomId];
+    flipCards = false;
+    story = {
+      storyDescription: '',
+      storyId: '',
+    };
+    Object.keys(users).forEach(userId => {
+      users[userId] = { storyPoints: 0, castedVote: false };
+    });
+    return {
+      status: 'Success',
+    };
+  }
+
+  setStroryDetails(storyDetails, roomId) {
+    if (!this.rooms[roomId]) {
+      this.roomNotFoundError();
+    }
     const room = this.rooms[roomId];
-    room.flipCards = true;
-    return roomId;
+    room.story = storyDetails;
+    return {
+      status: 'Success',
+    };
+  }
+
+  roomNotFoundError() {
+    throw new HttpException(
+      {
+        status: HttpStatus.NOT_FOUND,
+        error: 'Room Not Found',
+      },
+      HttpStatus.NOT_FOUND,
+    );
   }
 }
