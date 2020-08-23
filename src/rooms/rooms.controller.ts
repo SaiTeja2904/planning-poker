@@ -36,8 +36,8 @@ export class RoomsController {
   }
 
   @Post('setStoryDetails')
-  setStroryDetails({ storyDetails, roomId }) {
-    return this.roomsService.setStroryDetails(storyDetails, roomId);
+  setStroryDetails(@Body() { storyDetails, roomId }) {
+    return this.roomsService.setStoryDetails(storyDetails, roomId);
   }
 }
 

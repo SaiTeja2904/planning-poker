@@ -28,22 +28,22 @@ export class RoomsService {
       flipCards: false,
     };
     this.userService.addUser({ userDetails, currentRoom: roomId });
-    return roomId;
+    return { userDetails, roomId, isOwner: true };
   }
 
   joinRoom(userDetails, roomId) {
-    const { userId } = userDetails;
     if (!this.rooms[roomId]) {
       this.roomNotFoundError();
     }
-
+    const { userId } = userDetails;
     const room = this.rooms[roomId];
     room.users[userId] = {
       storyPoints: 0,
       castedVote: false,
     };
+
     this.userService.addUser({ userDetails, currentRoom: roomId });
-    return roomId;
+    return { userDetails, roomId, isOwner: room.owner === userId };
   }
 
   getRoomStatus(roomId) {
@@ -52,6 +52,7 @@ export class RoomsService {
     }
     const room = this.rooms[roomId];
     const currentRoomUsers = this.userService.getAllUsersByRoomId(roomId);
+
     const { owner, users, flipCards, story } = room;
     let usersData;
     if (flipCards) {
@@ -96,7 +97,7 @@ export class RoomsService {
       this.roomNotFoundError();
     }
     const room = this.rooms[roomId];
-    if (!room.users[+userId]) {
+    if (!room.users[userId]) {
       throw new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
@@ -118,9 +119,9 @@ export class RoomsService {
       this.roomNotFoundError();
     }
 
-    let { flipCards, story, users } = this.rooms[roomId];
-    flipCards = false;
-    story = {
+    let { users } = this.rooms[roomId];
+    this.rooms[roomId].flipCards = false;
+    this.rooms[roomId].story = {
       storyDescription: '',
       storyId: '',
     };
@@ -132,7 +133,7 @@ export class RoomsService {
     };
   }
 
-  setStroryDetails(storyDetails, roomId) {
+  setStoryDetails(storyDetails, roomId) {
     if (!this.rooms[roomId]) {
       this.roomNotFoundError();
     }

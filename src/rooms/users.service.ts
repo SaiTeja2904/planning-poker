@@ -16,7 +16,7 @@ export class UsersService {
   getAllUsersByRoomId(roomId) {
     const currentRoomUsers = {};
     return Object.values(this.getAllUsers()).reduce((acc, curr) => {
-      if (curr.currentRoom === +roomId) {
+      if (+curr.currentRoom === +roomId) {
         acc[curr.userId] = curr;
       }
       return acc;
@@ -26,7 +26,7 @@ export class UsersService {
 
 export interface User {
   userName: string;
-  userId: number;
+  userId: string;
   currentRoom: number;
 }
 
